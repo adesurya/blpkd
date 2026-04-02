@@ -307,3 +307,21 @@ def send_webhook(self, webhook_url: str, event: str, payload: dict, secret: Opti
         return True
     except requests.RequestException as exc:
         raise self.retry(exc=exc, countdown=settings.WEBHOOK_RETRY_DELAY * (2 ** self.request.retries))
+
+
+# ════════════════════════════════════════════════════
+# Trigger dari CPU worker → kirim task ke GPU queue
+# ════════════════════════════════════════════════════
+
+@celery_app.task(name="workers.analytics_tasks.run_face_clustering_trigger")
+def run_face_clustering_trigger() -> dict:
+    """
+    Dijadwalkan di beat schedule (CPU).
+    Tugasnya hanya mem-forward task clustering ke GPU queue
+    agar tidak ada import GPU di CPU worker.
+    """
+    task = celery_app.send_task(
+        "workers.face_tasks.run_face_clustering",
+        queue="gpu_tasks",
+    )
+    return {"forwarded_task_id": task.id}

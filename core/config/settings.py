@@ -1,7 +1,6 @@
 """
 core/config/settings.py
 Centralized configuration using Pydantic Settings.
-All settings are loaded from environment variables / .env file.
 """
 from __future__ import annotations
 
@@ -57,10 +56,11 @@ class AppSettings(BaseSettings):
     YOLO_MODEL: str = "yolov8n.pt"
     YOLO_CONFIDENCE: float = 0.5
     YOLO_IOU_THRESHOLD: float = 0.45
-    YOLO_DEVICE: str = "cuda"
+    # Default cpu — override ke "cuda" di .env jika pakai GPU
+    YOLO_DEVICE: str = "cpu"
 
     INSIGHTFACE_MODEL: str = "buffalo_l"
-    INSIGHTFACE_DEVICE: str = "cuda"
+    INSIGHTFACE_DEVICE: str = "cpu"
     FACE_RECOGNITION_THRESHOLD: float = 0.45
     FACE_DETECTION_MIN_SIZE: int = 20
 
@@ -78,12 +78,13 @@ class AppSettings(BaseSettings):
     STREAM_BUFFER_SIZE: int = 10
 
     # ── Compression ────────────────────────────────────────
-    COMPRESSION_CODEC: str = "h264_nvenc"
-    COMPRESSION_PRESET: str = "p4"
+    # Default libx264 (CPU) — override ke h264_nvenc di .env jika pakai GPU
+    COMPRESSION_CODEC: str = "libx264"
+    COMPRESSION_PRESET: str = "medium"
     COMPRESSION_CRF: int = 23
     COMPRESSION_AUDIO_CODEC: str = "aac"
     COMPRESSION_AUDIO_BITRATE: str = "128k"
-    GPU_DECODE: bool = True
+    GPU_DECODE: bool = False
 
     # ── API ────────────────────────────────────────────────
     API_V1_PREFIX: str = "/api/v1"
@@ -105,13 +106,11 @@ class AppSettings(BaseSettings):
     WEBHOOK_RETRY_DELAY: int = 5
 
     # ── Scale — queue backend ──────────────────────────────
-    # MVP: "redis" | Growth: "rabbitmq" | Enterprise: "kafka"
     QUEUE_BACKEND: Literal["redis", "rabbitmq", "kafka"] = "redis"
     RABBITMQ_URL: str = "amqp://guest:guest@rabbitmq:5672/"
     KAFKA_BOOTSTRAP_SERVERS: str = "kafka:9092"
 
     # ── Scale — vector db backend ──────────────────────────
-    # MVP: "pgvector" | Enterprise: "milvus"
     VECTOR_BACKEND: Literal["pgvector", "milvus"] = "pgvector"
     MILVUS_HOST: str = "milvus"
     MILVUS_PORT: int = 19530
@@ -119,12 +118,30 @@ class AppSettings(BaseSettings):
     @field_validator("YOLO_DEVICE")
     @classmethod
     def validate_device(cls, v: str) -> str:
-        import torch
-        if v.startswith("cuda") and not torch.cuda.is_available():
-            import structlog
-            log = structlog.get_logger()
-            log.warning("CUDA not available, falling back to CPU", requested_device=v)
+        """
+        Validasi device tanpa import torch.
+        torch hanya tersedia di GPU worker — di container lain cukup
+        terima nilai dari .env apa adanya.
+        Jika torch tidak ada dan nilai adalah 'cuda', fallback ke 'cpu'.
+        """
+        if not v.startswith("cuda"):
+            return v
+
+        # Coba cek torch, tapi tidak crash jika tidak ada
+        try:
+            import torch
+            if not torch.cuda.is_available():
+                import structlog
+                structlog.get_logger().warning(
+                    "CUDA not available, falling back to CPU",
+                    requested_device=v
+                )
+                return "cpu"
+        except ImportError:
+            # torch tidak terinstall di container ini (API / CPU worker)
+            # Kembalikan "cpu" agar tidak ada error
             return "cpu"
+
         return v
 
     @property

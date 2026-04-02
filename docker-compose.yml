@@ -38,7 +38,7 @@ services:
       context: .
       dockerfile: infrastructure/docker/Dockerfile.worker
     container_name: vision-worker-cpu
-    command: celery -A workers.celery_app worker -Q cpu_tasks -c 4 --loglevel=info
+    command: celery -A workers.celery_app worker -Q cpu_tasks -c 4 --loglevel=info --include=workers.analytics_tasks
     env_file: .env
     volumes:
       - ./models:/app/models
@@ -55,7 +55,7 @@ services:
       context: .
       dockerfile: infrastructure/docker/Dockerfile.gpu_worker
     container_name: vision-worker-gpu
-    command: celery -A workers.celery_app worker -Q gpu_tasks -c 2 --loglevel=info
+    command: celery -A workers.celery_app worker -Q gpu_tasks -c 2 --loglevel=info --include=workers.detection_tasks,workers.face_tasks,workers.compression_tasks,workers.analytics_tasks
     env_file: .env
     volumes:
       - ./models:/app/models
@@ -124,7 +124,7 @@ services:
     restart: unless-stopped
 
   # ── Redis ──────────────────────────────────────────────────────
-  redis: 
+  redis:
     image: redis:7.4-alpine
     container_name: vision-redis
     command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
