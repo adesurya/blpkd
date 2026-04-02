@@ -105,7 +105,7 @@ class FaceEngine:
 
         log.info("face_engine.loading", model=settings.INSIGHTFACE_MODEL)
 
-        ctx_id = 0 if settings.INSIGHTFACE_DEVICE == "cuda" else -1
+        ctx_id = 0 if settings.insightface_device_resolved == "cuda" else -1
         self._app = FaceAnalysis(
             name=settings.INSIGHTFACE_MODEL,
             root=settings.MODELS_PATH,

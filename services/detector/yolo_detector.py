@@ -123,7 +123,7 @@ class YOLODetector:
         self.model_path = settings.YOLO_MODEL
         self.confidence = settings.YOLO_CONFIDENCE
         self.iou_threshold = settings.YOLO_IOU_THRESHOLD
-        self.device = settings.YOLO_DEVICE
+        self.device = settings.yolo_device_resolved
 
         log.info("detector.loading_model", model=self.model_path, device=self.device)
         self._model = YOLO(self.model_path)
