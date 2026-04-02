@@ -1,0 +1,53 @@
+# .dockerignore — file ini WAJIB ada di root folder project (sejajar docker-compose.yml)
+# Mengecualikan file yang tidak perlu masuk ke Docker image
+
+# Environment & secrets — JANGAN masuk ke image
+.env
+.env.local
+
+# Git
+.git/
+.gitignore
+
+# Python cache — tidak perlu, akan di-generate ulang
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Testing — tidak dibutuhkan di production image
+tests/
+
+# Dokumentasi — tidak dibutuhkan di production image
+docs/
+*.md
+!README.md
+
+# Models — di-mount via volume, jangan di-bake ke image (terlalu besar)
+models/
+
+# Data & uploads
+data/
+uploads/
+logs/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Windows scripts (tidak dibutuhkan di dalam container)
+*.bat
+*.ps1
+Makefile

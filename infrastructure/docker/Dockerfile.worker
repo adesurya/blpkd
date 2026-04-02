@@ -1,5 +1,4 @@
 # infrastructure/docker/Dockerfile.worker
-# CPU worker: analytics, webhooks, aggregation
 FROM python:3.11-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -19,11 +18,8 @@ COPY requirements-api.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements-api.txt
 
-COPY core/     ./core/
-COPY services/ ./services/
-COPY workers/  ./workers/
-COPY scripts/  ./scripts/
+COPY . .
 
-RUN mkdir -p /app/models /tmp/vision
+RUN mkdir -p /app/models /tmp/vision /app/logs
 
-CMD ["celery", "-A", "workers.celery_app", "worker", "-Q", "cpu_tasks", "-c", "4", "--loglevel=info"]
+CMD ["celery", "-A", "workers.celery_app", "worker", "-Q", "cpu_tasks", "-c", "4", "--loglevel=info", "--include=workers.detection_tasks"]

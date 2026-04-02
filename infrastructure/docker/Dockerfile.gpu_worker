@@ -1,5 +1,4 @@
 # infrastructure/docker/Dockerfile.gpu_worker
-# GPU worker: YOLOv8, InsightFace, FFmpeg NVENC
 FROM nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -7,8 +6,6 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONPATH=/app
 
-# System dependencies
-# build-essential (g++, gcc, make) WAJIB untuk compile insightface dari source
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     python3.11 \
@@ -28,25 +25,18 @@ RUN ln -sf /usr/bin/python3.11 /usr/bin/python && \
 
 WORKDIR /app
 
-# Step 1: Upgrade pip
 RUN pip install --no-cache-dir --upgrade pip
 
-# Step 2: Install PyTorch dengan CUDA 12.1
 RUN pip install --no-cache-dir \
     torch==2.5.1 \
     torchvision==0.20.1 \
     --index-url https://download.pytorch.org/whl/cu121
 
-# Step 3: Install dependencies GPU (copy KEDUA file karena gpu include api)
 COPY requirements-api.txt requirements-gpu.txt ./
 RUN pip install --no-cache-dir -r requirements-gpu.txt
 
-# Copy source code
-COPY core/     ./core/
-COPY services/ ./services/
-COPY workers/  ./workers/
-COPY scripts/  ./scripts/
+COPY . .
 
-RUN mkdir -p /app/models /tmp/vision
+RUN mkdir -p /app/models /tmp/vision /app/logs
 
-CMD ["celery", "-A", "workers.celery_app", "worker", "-Q", "gpu_tasks", "-c", "2", "--loglevel=info"]
+CMD ["celery", "-A", "workers.celery_app", "worker", "-Q", "gpu_tasks", "-c", "2", "--loglevel=info", "--include=workers.detection_tasks"]

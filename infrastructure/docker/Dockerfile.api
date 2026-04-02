@@ -1,7 +1,6 @@
 # infrastructure/docker/Dockerfile.api
 FROM python:3.11-slim
 
-# System dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     ffmpeg \
@@ -15,22 +14,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Set PYTHONPATH agar semua module (core, services, workers) bisa di-import
-# dari mana pun script dijalankan di dalam container
 ENV PYTHONPATH=/app
 
-# Install Python dependencies
+# Install dependencies (layer ini di-cache jika requirements tidak berubah)
 COPY requirements-api.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements-api.txt
 
-# Copy seluruh source code
-COPY core/     ./core/
-COPY services/ ./services/
-COPY workers/  ./workers/
-COPY scripts/  ./scripts/
+# Copy semua source code sekaligus via COPY . .
+# File yang dikecualikan ada di .dockerignore
+COPY . .
 
-# Jalankan sebagai non-root user untuk keamanan
+RUN mkdir -p /app/models /tmp/vision /app/logs
+
 RUN useradd -m -u 1000 vision && chown -R vision:vision /app
 USER vision
 
