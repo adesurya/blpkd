@@ -7,6 +7,13 @@ from __future__ import annotations
 
 import asyncio
 import sys
+import os
+
+# Pastikan root project (/app) ada di sys.path agar import core.* bisa bekerja
+# Ini sebagai fallback jika PYTHONPATH belum di-set di environment
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
 import structlog
 
@@ -23,11 +30,8 @@ async def init_database() -> None:
     engine = create_async_engine(settings.DATABASE_URL, echo=True)
 
     async with engine.begin() as conn:
-        # Enable pgvector
         await conn.execute(sa.text("CREATE EXTENSION IF NOT EXISTS vector"))
         await conn.execute(sa.text('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"'))
-
-        # Create all tables from ORM models
         await conn.run_sync(Base.metadata.create_all)
 
     await engine.dispose()
