@@ -1,11 +1,16 @@
 """
 core/config/logging.py
 Structured logging setup using structlog.
-Outputs JSON in production, colored console in development.
+
+PrintLoggerFactory tidak punya attribute .name, jadi tidak bisa
+pakai add_logger_name. Gunakan stdlib.add_log_level saja,
+atau switch ke stdlib logging factory.
 """
 from __future__ import annotations
+
 import logging
 import sys
+
 import structlog
 from core.config.settings import settings
 
@@ -14,21 +19,20 @@ def configure_logging() -> None:
     shared_processors = [
         structlog.contextvars.merge_contextvars,
         structlog.stdlib.add_log_level,
-        structlog.stdlib.add_logger_name,
+        # DIHAPUS: structlog.stdlib.add_logger_name
+        # → hanya bekerja dengan stdlib LoggerFactory, bukan PrintLoggerFactory
         structlog.processors.TimeStamper(fmt="iso"),
         structlog.processors.StackInfoRenderer(),
     ]
 
     if settings.is_production:
-        # JSON output for log aggregation (ELK, Loki, Datadog)
         processors = shared_processors + [
             structlog.processors.format_exc_info,
             structlog.processors.JSONRenderer(),
         ]
     else:
-        # Human-readable colored output for development
         processors = shared_processors + [
-            structlog.dev.ConsoleRenderer(colors=True),
+            structlog.dev.ConsoleRenderer(colors=False),
         ]
 
     structlog.configure(
