@@ -1,0 +1,41 @@
+# infrastructure/docker/Dockerfile.gpu_worker
+# Base: NVIDIA CUDA image with cuDNN for AI inference + NVENC/NVDEC for video
+FROM nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# System deps including FFmpeg with NVENC support
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3.11 \
+    python3.11-dev \
+    python3-pip \
+    ffmpeg \
+    libgl1 \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN ln -s /usr/bin/python3.11 /usr/bin/python
+
+WORKDIR /app
+
+COPY pyproject.toml .
+RUN pip install --no-cache-dir poetry && \
+    poetry config virtualenvs.create false && \
+    poetry install --no-dev --no-interaction
+
+# Pre-download AI models at build time (optional — saves first-run time)
+# RUN python -c "from ultralytics import YOLO; YOLO('yolov8n.pt')"
+# RUN python -c "import insightface; from insightface.app import FaceAnalysis; FaceAnalysis(name='buffalo_l').prepare(ctx_id=0)"
+
+COPY core/ ./core/
+COPY services/ ./services/
+COPY workers/ ./workers/
+
+RUN mkdir -p /app/models /tmp/vision
+
+CMD ["celery", "-A", "workers.celery_app", "worker", "-Q", "gpu_tasks", "-c", "2", "--loglevel=info"]

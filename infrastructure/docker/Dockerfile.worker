@@ -1,0 +1,23 @@
+# infrastructure/docker/Dockerfile.worker
+FROM python:3.11-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ffmpeg \
+    libgl1 \
+    libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY pyproject.toml .
+RUN pip install --no-cache-dir poetry && \
+    poetry config virtualenvs.create false && \
+    poetry install --no-dev --no-interaction
+
+COPY core/ ./core/
+COPY services/ ./services/
+COPY workers/ ./workers/
+
+RUN mkdir -p /app/models /tmp/vision
+
+CMD ["celery", "-A", "workers.celery_app", "worker", "-Q", "cpu_tasks", "-c", "4", "--loglevel=info"]

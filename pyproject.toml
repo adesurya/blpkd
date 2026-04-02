@@ -1,0 +1,107 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:BuildBackend"
+
+[project]
+name = "vision-platform"
+version = "0.1.0"
+description = "AI Vision & Face Recognition Backend Platform"
+requires-python = ">=3.11"
+
+[tool.poetry]
+name = "vision-platform"
+version = "0.1.0"
+description = "AI Vision & Face Recognition Backend Platform"
+authors = ["Vision Platform Team"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+# ── API Framework ──────────────────────────────────────────
+fastapi = "^0.115.0"
+uvicorn = {extras = ["standard"], version = "^0.32.0"}
+pydantic = "^2.9.0"
+pydantic-settings = "^2.6.0"
+python-multipart = "^0.0.12"  # file upload
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}  # JWT
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}  # password hash
+
+# ── Task Queue ─────────────────────────────────────────────
+celery = {extras = ["redis"], version = "^5.4.0"}
+redis = "^5.2.0"
+flower = "^2.0.1"  # Celery monitoring UI
+
+# ── Database ───────────────────────────────────────────────
+sqlalchemy = {extras = ["asyncio"], version = "^2.0.36"}
+asyncpg = "^0.30.0"           # async PostgreSQL driver
+psycopg2-binary = "^2.9.10"   # sync driver (Alembic)
+alembic = "^1.14.0"
+pgvector = "^0.3.5"           # vector similarity search
+
+# ── Object Storage ─────────────────────────────────────────
+minio = "^7.2.11"
+boto3 = "^1.35.0"             # S3-compatible, same API
+
+# ── Computer Vision Core ───────────────────────────────────
+opencv-python-headless = "^4.10.0"
+numpy = "^1.26.4"
+Pillow = "^11.0.0"
+
+# ── Object Detection ───────────────────────────────────────
+ultralytics = "^8.3.0"        # YOLOv8/YOLOv11 + ByteTrack + BotSORT
+
+# ── Face Recognition ───────────────────────────────────────
+insightface = "^0.7.3"
+scikit-learn = "^1.5.2"       # DBSCAN clustering
+
+# ── ML & Deep Learning ─────────────────────────────────────
+torch = {version = "^2.5.1", source = "pytorch"}
+torchvision = {version = "^0.20.1", source = "pytorch"}
+onnxruntime-gpu = "^1.20.0"   # GPU-accelerated ONNX inference
+
+# ── Video Processing ───────────────────────────────────────
+ffmpeg-python = "^0.2.0"      # Python FFmpeg wrapper
+m3u8 = "^3.5.0"               # HLS/m3u8 parser
+requests = "^2.32.0"
+httpx = "^0.28.0"             # async HTTP for stream fetching
+aiofiles = "^24.1.0"          # async file I/O
+av = "^13.1.0"                # PyAV for frame extraction
+
+# ── Monitoring & Logging ───────────────────────────────────
+structlog = "^24.4.0"
+prometheus-client = "^0.21.0"
+prometheus-fastapi-instrumentator = "^7.0.0"
+
+# ── Utils ──────────────────────────────────────────────────
+python-dotenv = "^1.0.0"
+tenacity = "^9.0.0"           # retry logic
+schedule = "^1.2.0"           # job scheduling
+click = "^8.1.7"              # CLI tools
+
+[[tool.poetry.source]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cu121"  # CUDA 12.1
+priority = "supplemental"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.0"
+pytest-asyncio = "^0.24.0"
+pytest-cov = "^6.0.0"
+httpx = "^0.28.0"  # test client
+factory-boy = "^3.3.1"
+black = "^24.10.0"
+ruff = "^0.8.0"
+mypy = "^1.13.0"
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "I", "N", "W"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+ignore_missing_imports = true
