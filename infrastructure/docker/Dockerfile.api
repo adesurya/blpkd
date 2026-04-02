@@ -24,8 +24,9 @@ RUN pip install --no-cache-dir --upgrade pip && \
 
 # Copy source code
 COPY core/ ./core/
-COPY services/api/ ./services/api/
+COPY services/ ./services/
 COPY workers/ ./workers/
+COPY scripts/ ./scripts/
 
 # Jalankan sebagai non-root user untuk keamanan
 RUN useradd -m -u 1000 vision && chown -R vision:vision /app
