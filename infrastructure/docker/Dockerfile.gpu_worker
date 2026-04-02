@@ -37,7 +37,9 @@ RUN pip install --no-cache-dir \
     --index-url https://download.pytorch.org/whl/cu121
 
 # Step 3: Install semua dependencies GPU worker (termasuk insightface)
-COPY requirements-gpu.txt .
+# PENTING: copy KEDUA file sekaligus karena requirements-gpu.txt
+# menggunakan "-r requirements-api.txt" di dalamnya
+COPY requirements-api.txt requirements-gpu.txt ./
 RUN pip install --no-cache-dir -r requirements-gpu.txt
 
 # Copy source code
