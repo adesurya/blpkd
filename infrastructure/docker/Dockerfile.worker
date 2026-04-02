@@ -1,18 +1,23 @@
 # infrastructure/docker/Dockerfile.worker
+# CPU worker: analytics, webhooks, aggregation — tidak butuh GPU/insightface
 FROM python:3.11-slim
 
+# build-essential dibutuhkan untuk compile beberapa package (av, psycopg2, dll)
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
     ffmpeg \
     libgl1 \
     libglib2.0-0 \
+    libsm6 \
+    libxext6 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Install Python dependencies langsung via pip
-COPY requirements.txt .
+# CPU worker hanya butuh requirements-api.txt (sama dengan API, tanpa insightface/torch)
+COPY requirements-api.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir -r requirements-api.txt
 
 COPY core/ ./core/
 COPY services/ ./services/

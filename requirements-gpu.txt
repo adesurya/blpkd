@@ -1,14 +1,17 @@
 # requirements-gpu.txt
-# Digunakan oleh Dockerfile.gpu_worker
-# Berisi semua package dari requirements.txt PLUS package GPU-specific
+# Untuk: Dockerfile.gpu_worker SAJA
+# Berisi: semua dari requirements-api.txt + insightface + ultralytics + onnxruntime-gpu
+# CATATAN: torch dan torchvision TIDAK di sini — di-install terpisah di Dockerfile
+#          via --index-url https://download.pytorch.org/whl/cu121
 
-# ── Semua package dari requirements.txt ──────────────────────
--r requirements.txt
+# ── Semua package dari requirements-api.txt ────────────────
+-r requirements-api.txt
 
-# ── ML & Deep Learning (GPU) ─────────────────────────────────
-# PyTorch dengan CUDA 12.1 — install dari index khusus PyTorch
-# (di-handle langsung di Dockerfile.gpu_worker via pip --index-url)
-# torch dan torchvision tidak di-list di sini karena butuh --index-url khusus
+# ── Object Detection ───────────────────────────────────────
+ultralytics==8.3.55
 
-# ONNX Runtime GPU — untuk inference model .onnx
+# ── Face Recognition (butuh g++ untuk compile dari source) ─
+insightface==0.7.3
+
+# ── ONNX Runtime GPU ───────────────────────────────────────
 onnxruntime-gpu==1.20.1

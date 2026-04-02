@@ -1,13 +1,15 @@
 # infrastructure/docker/Dockerfile.gpu_worker
-# Base: NVIDIA CUDA image dengan cuDNN untuk AI inference + NVENC/NVDEC untuk video
+# GPU worker: YOLOv8, InsightFace, FFmpeg NVENC
 FROM nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
-# System dependencies termasuk Python 3.11 dan FFmpeg
+# System dependencies
+# build-essential (g++, gcc, make) WAJIB untuk compile insightface dari source
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
     python3.11 \
     python3.11-dev \
     python3-pip \
@@ -34,8 +36,8 @@ RUN pip install --no-cache-dir \
     torchvision==0.20.1 \
     --index-url https://download.pytorch.org/whl/cu121
 
-# Step 3: Install semua dependencies lainnya
-COPY requirements.txt requirements-gpu.txt ./
+# Step 3: Install semua dependencies GPU worker (termasuk insightface)
+COPY requirements-gpu.txt .
 RUN pip install --no-cache-dir -r requirements-gpu.txt
 
 # Copy source code
@@ -44,9 +46,5 @@ COPY services/ ./services/
 COPY workers/ ./workers/
 
 RUN mkdir -p /app/models /tmp/vision
-
-# Pre-download AI models saat build (opsional, uncomment jika ingin)
-# RUN python -c "from ultralytics import YOLO; YOLO('yolov8n.pt')"
-# RUN python -c "from insightface.app import FaceAnalysis; FaceAnalysis(name='buffalo_l', root='/app/models').prepare(ctx_id=0)"
 
 CMD ["celery", "-A", "workers.celery_app", "worker", "-Q", "gpu_tasks", "-c", "2", "--loglevel=info"]
