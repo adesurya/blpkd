@@ -1,12 +1,12 @@
 # infrastructure/docker/Dockerfile.gpu_worker
-# Base: NVIDIA CUDA image with cuDNN for AI inference + NVENC/NVDEC for video
+# Base: NVIDIA CUDA image dengan cuDNN untuk AI inference + NVENC/NVDEC untuk video
 FROM nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
-# System deps including FFmpeg with NVENC support
+# System dependencies termasuk Python 3.11 dan FFmpeg
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3.11 \
     python3.11-dev \
@@ -17,25 +17,36 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libsm6 \
     libxext6 \
     git \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-RUN ln -s /usr/bin/python3.11 /usr/bin/python
+RUN ln -sf /usr/bin/python3.11 /usr/bin/python && \
+    ln -sf /usr/bin/python3.11 /usr/bin/python3
 
 WORKDIR /app
 
-COPY pyproject.toml .
-RUN pip install --no-cache-dir poetry && \
-    poetry config virtualenvs.create false && \
-    poetry install --no-dev --no-interaction
+# Step 1: Upgrade pip
+RUN pip install --no-cache-dir --upgrade pip
 
-# Pre-download AI models at build time (optional — saves first-run time)
-# RUN python -c "from ultralytics import YOLO; YOLO('yolov8n.pt')"
-# RUN python -c "import insightface; from insightface.app import FaceAnalysis; FaceAnalysis(name='buffalo_l').prepare(ctx_id=0)"
+# Step 2: Install PyTorch dengan CUDA 12.1 (harus pakai index-url khusus)
+RUN pip install --no-cache-dir \
+    torch==2.5.1 \
+    torchvision==0.20.1 \
+    --index-url https://download.pytorch.org/whl/cu121
 
+# Step 3: Install semua dependencies lainnya
+COPY requirements.txt requirements-gpu.txt ./
+RUN pip install --no-cache-dir -r requirements-gpu.txt
+
+# Copy source code
 COPY core/ ./core/
 COPY services/ ./services/
 COPY workers/ ./workers/
 
 RUN mkdir -p /app/models /tmp/vision
+
+# Pre-download AI models saat build (opsional, uncomment jika ingin)
+# RUN python -c "from ultralytics import YOLO; YOLO('yolov8n.pt')"
+# RUN python -c "from insightface.app import FaceAnalysis; FaceAnalysis(name='buffalo_l', root='/app/models').prepare(ctx_id=0)"
 
 CMD ["celery", "-A", "workers.celery_app", "worker", "-Q", "gpu_tasks", "-c", "2", "--loglevel=info"]

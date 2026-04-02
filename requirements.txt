@@ -1,0 +1,59 @@
+# requirements.txt
+# Digunakan oleh Dockerfile.api dan Dockerfile.worker
+# Semua versi di-pin untuk build yang konsisten dan reproducible
+
+# ── API Framework ──────────────────────────────────────────
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+pydantic==2.9.2
+pydantic-settings==2.6.1
+python-multipart==0.0.12
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# ── Task Queue ─────────────────────────────────────────────
+celery[redis]==5.4.0
+redis==5.2.1
+flower==2.0.1
+
+# ── Database ───────────────────────────────────────────────
+sqlalchemy[asyncio]==2.0.36
+asyncpg==0.30.0
+psycopg2-binary==2.9.10
+alembic==1.14.0
+pgvector==0.3.5
+
+# ── Object Storage ─────────────────────────────────────────
+minio==7.2.11
+boto3==1.35.86
+
+# ── Computer Vision Core ───────────────────────────────────
+opencv-python-headless==4.10.0.84
+numpy==1.26.4
+Pillow==11.0.0
+
+# ── Object Detection ───────────────────────────────────────
+ultralytics==8.3.55
+
+# ── Face Recognition ───────────────────────────────────────
+insightface==0.7.3
+scikit-learn==1.5.2
+
+# ── Video Processing ───────────────────────────────────────
+ffmpeg-python==0.2.0
+m3u8==3.5.0
+requests==2.32.3
+httpx==0.28.1
+aiofiles==24.1.0
+av==13.1.0
+
+# ── Monitoring & Logging ───────────────────────────────────
+structlog==24.4.0
+prometheus-client==0.21.1
+prometheus-fastapi-instrumentator==7.0.0
+
+# ── Utils ──────────────────────────────────────────────────
+python-dotenv==1.0.1
+tenacity==9.0.0
+schedule==1.2.2
+click==8.1.7

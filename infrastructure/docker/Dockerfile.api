@@ -14,18 +14,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Install Python deps
-COPY pyproject.toml .
-RUN pip install --no-cache-dir poetry && \
-    poetry config virtualenvs.create false && \
-    poetry install --no-dev --no-interaction
+# Install Python dependencies langsung via pip
+# (lebih cepat dan tidak ada masalah kompatibilitas Poetry versi)
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
-# Copy source
+# Copy source code
 COPY core/ ./core/
 COPY services/api/ ./services/api/
 COPY workers/ ./workers/
 
-# Non-root user
+# Jalankan sebagai non-root user untuk keamanan
 RUN useradd -m -u 1000 vision && chown -R vision:vision /app
 USER vision
 

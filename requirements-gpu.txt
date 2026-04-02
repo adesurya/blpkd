@@ -1,0 +1,14 @@
+# requirements-gpu.txt
+# Digunakan oleh Dockerfile.gpu_worker
+# Berisi semua package dari requirements.txt PLUS package GPU-specific
+
+# ── Semua package dari requirements.txt ──────────────────────
+-r requirements.txt
+
+# ── ML & Deep Learning (GPU) ─────────────────────────────────
+# PyTorch dengan CUDA 12.1 — install dari index khusus PyTorch
+# (di-handle langsung di Dockerfile.gpu_worker via pip --index-url)
+# torch dan torchvision tidak di-list di sini karena butuh --index-url khusus
+
+# ONNX Runtime GPU — untuk inference model .onnx
+onnxruntime-gpu==1.20.1
