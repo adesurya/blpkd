@@ -132,7 +132,7 @@ def process_stream_frame(self, frame_data: dict) -> dict[str, Any]:
 
         await engine.dispose()
 
-    asyncio.get_event_loop().run_until_complete(_save())
+    asyncio.run(_save())
     return {"camera_id": camera_id, "frame_number": frame_number,
             "count": total_count, "zone_counts": zone_counts,
             "inference_ms": round(det_result.inference_time_ms, 1)}
@@ -249,7 +249,7 @@ def process_video_file(self, recording_id: str, minio_key: str, config: dict) ->
             if os.path.exists(tmp_path):
                 os.unlink(tmp_path)
 
-    return asyncio.get_event_loop().run_until_complete(_run())
+    return asyncio.run(_run())
 
 
 @celery_app.task(name="workers.face_tasks.run_face_clustering", bind=True)
@@ -282,7 +282,7 @@ def run_face_clustering(self) -> dict[str, Any]:
         log.info("face_clustering.complete", faces=len(face_ids), clusters=n_clusters)
         await engine.dispose()
         return {"clustered": len(face_ids), "clusters": n_clusters}
-    return asyncio.get_event_loop().run_until_complete(_cluster())
+    return asyncio.run(_cluster())
 
 
 @celery_app.task(name="workers.analytics_tasks.aggregate_counts")

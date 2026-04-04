@@ -169,17 +169,16 @@ class YOLODetector:
         h, w = frame.shape[:2]
         t_start = time.perf_counter()
 
-        # Run YOLOv8 with ByteTrack tracker
-        # persist=True keeps tracks across frames
-        results = self._model.track(
+        # Run YOLOv8 detection
+        # Gunakan predict() bukan track() agar tidak butuh package 'lap'
+        # track() butuh lap/lapjv untuk Hungarian algorithm
+        results = self._model.predict(
             frame,
-            persist=True,
             conf=self.confidence,
             iou=self.iou_threshold,
             device=self.device,
             classes=[0],         # class 0 = "person" in COCO
             verbose=False,
-            tracker="bytetrack.yaml",   # ByteTrack (fast) or botsort.yaml (more accurate)
         )
 
         inference_ms = (time.perf_counter() - t_start) * 1000
@@ -204,7 +203,8 @@ class YOLODetector:
                     h=h_norm,
                 )
 
-                track_id = int(box.id[0]) if box.id is not None else i
+                # predict() tidak punya track_id — gunakan index sebagai ID sementara
+                track_id = int(box.id[0]) if (hasattr(box, "id") and box.id is not None) else i
                 confidence = float(box.conf[0])
 
                 # Determine zone
