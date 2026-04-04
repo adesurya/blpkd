@@ -3,8 +3,19 @@ workers/celery_app.py
 Celery configuration.
 
 Semua tasks ada di satu file: workers/detection_tasks.py
-- GPU tasks: process_stream_frame, process_video_file, run_face_clustering, compress_video
-- CPU tasks: aggregate_counts, send_webhook, run_face_clustering_trigger
+Nama task HARUS sama persis dengan decorator @celery_app.task(name=...)
+di detection_tasks.py:
+
+GPU tasks:
+  workers.detection_tasks.process_stream_frame
+  workers.detection_tasks.process_video_file
+  workers.face_tasks.run_face_clustering
+  workers.compression_tasks.compress_video
+
+CPU tasks:
+  workers.analytics_tasks.aggregate_counts
+  workers.analytics_tasks.send_webhook
+  workers.analytics_tasks.run_face_clustering_trigger
 """
 from celery import Celery
 from core.config.settings import settings
@@ -22,15 +33,15 @@ celery_app.conf.update(
     timezone="UTC",
     enable_utc=True,
 
-    # Routing: semua tasks ada di detection_tasks.py
+    # Nama task HARUS cocok dengan decorator di detection_tasks.py
     task_routes={
-        "workers.detection_tasks.process_stream_frame":  {"queue": "gpu_tasks"},
-        "workers.detection_tasks.process_video_file":    {"queue": "gpu_tasks"},
-        "workers.detection_tasks.compress_video":        {"queue": "gpu_tasks"},
-        "workers.detection_tasks.run_face_clustering":   {"queue": "gpu_tasks"},
-        "workers.detection_tasks.aggregate_counts":      {"queue": "cpu_tasks"},
-        "workers.detection_tasks.send_webhook":          {"queue": "cpu_tasks"},
-        "workers.detection_tasks.run_face_clustering_trigger": {"queue": "cpu_tasks"},
+        "workers.detection_tasks.process_stream_frame":         {"queue": "gpu_tasks"},
+        "workers.detection_tasks.process_video_file":           {"queue": "gpu_tasks"},
+        "workers.face_tasks.run_face_clustering":               {"queue": "gpu_tasks"},
+        "workers.compression_tasks.compress_video":             {"queue": "gpu_tasks"},
+        "workers.analytics_tasks.aggregate_counts":             {"queue": "cpu_tasks"},
+        "workers.analytics_tasks.send_webhook":                 {"queue": "cpu_tasks"},
+        "workers.analytics_tasks.run_face_clustering_trigger":  {"queue": "cpu_tasks"},
     },
 
     task_acks_late=True,
@@ -40,14 +51,17 @@ celery_app.conf.update(
     result_expires=86400,
     worker_prefetch_multiplier=1,
 
-    # Beat schedule — hanya trigger ringan, tidak load GPU modules
+    # Suppress deprecation warning untuk Celery 6.0
+    broker_connection_retry_on_startup=True,
+
+    # Beat schedule — nama HARUS cocok dengan task name di detection_tasks.py
     beat_schedule={
         "cluster-faces-every-30min": {
-            "task": "workers.detection_tasks.run_face_clustering_trigger",
+            "task": "workers.analytics_tasks.run_face_clustering_trigger",
             "schedule": 1800.0,
         },
         "aggregate-analytics-every-5min": {
-            "task": "workers.detection_tasks.aggregate_counts",
+            "task": "workers.analytics_tasks.aggregate_counts",
             "schedule": 300.0,
         },
     },
