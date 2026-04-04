@@ -55,7 +55,7 @@ services:
       context: .
       dockerfile: infrastructure/docker/Dockerfile.gpu_worker
     container_name: vision-worker-gpu
-    command: celery -A workers.celery_app worker -Q gpu_tasks -c 2 --loglevel=info --include=workers.detection_tasks
+    command: celery -A workers.celery_app worker -Q gpu_tasks -c 1 --pool=solo --loglevel=info --include=workers.detection_tasks
     env_file: .env
     volumes:
       - ./models:/app/models

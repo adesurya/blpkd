@@ -54,6 +54,13 @@ celery_app.conf.update(
     # Suppress deprecation warning untuk Celery 6.0
     broker_connection_retry_on_startup=True,
 
+    # Fix SIGSEGV: PyTorch/YOLOv8 tidak aman dengan Celery prefork (fork)
+    # Solusi: gunakan concurrency=1 per worker dan prefork dengan maxtasksperchild
+    # Setiap task selesai, worker process di-respawn (clean state)
+    worker_max_tasks_per_child=10,      # respawn worker setiap 10 task
+    worker_prefetch_multiplier=1,       # ambil 1 task per worker
+
+
     # Beat schedule — nama HARUS cocok dengan task name di detection_tasks.py
     beat_schedule={
         "cluster-faces-every-30min": {
@@ -66,3 +73,7 @@ celery_app.conf.update(
         },
     },
 )
+
+
+# Fix SIGSEGV: PyTorch/YOLOv8 tidak aman di-fork
+# tanpa mewarisi state PyTorch dari parent process
