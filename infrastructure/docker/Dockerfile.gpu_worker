@@ -1,5 +1,6 @@
 # infrastructure/docker/Dockerfile.gpu_worker
-FROM nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04
+# cudnn9 agar cocok dengan onnxruntime-gpu 1.20.x
+FROM nvidia/cuda:12.1.1-cudnn9-runtime-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1

@@ -1,17 +1,14 @@
 # requirements-gpu.txt
-# Untuk: Dockerfile.gpu_worker SAJA
-# Berisi: semua dari requirements-api.txt + insightface + ultralytics + onnxruntime-gpu
-# CATATAN: torch dan torchvision TIDAK di sini — di-install terpisah di Dockerfile
-#          via --index-url https://download.pytorch.org/whl/cu121
+# GPU worker dependencies
 
-# ── Semua package dari requirements-api.txt ────────────────
 -r requirements-api.txt
 
-# ── Object Detection ───────────────────────────────────────
+# Object Detection
 ultralytics==8.3.55
 
-# ── Face Recognition (butuh g++ untuk compile dari source) ─
+# Face Recognition
 insightface==0.7.3
 
-# ── ONNX Runtime GPU ───────────────────────────────────────
-onnxruntime-gpu==1.20.1
+# onnxruntime-gpu 1.17.x cocok dengan cuDNN 8 (image nvidia/cuda:12.1.1-cudnn8)
+# onnxruntime-gpu 1.20.x butuh cuDNN 9 — tidak cocok dengan base image kita
+onnxruntime-gpu==1.17.3

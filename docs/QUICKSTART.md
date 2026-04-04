@@ -290,3 +290,30 @@ docker compose up -d --scale worker-gpu=3
 echo "VECTOR_BACKEND=milvus" >> .env
 # No code changes needed — abstraction layer handles it
 ```
+
+
+Apabila ada error
+docker compose cp core/config/logging.py api:/app/core/config/logging.py
+[+] Copying 1/0
+ ✔ vision-api copy core/config/logging.py to vision-api:/app/core/config/logging.py Copied                                   0.0s
+[root@REDTEAM-AI blpkd]# docker compose exec api python scripts/setup/init_db.py
+2026-04-02T10:07:48.381774Z [info     ] setup.starting
+2026-04-02T10:07:48.531127Z [error    ] setup.failed                   error=No module named 'core.models'
+
+
+Solusi 
+docker compose exec api sh -c "echo '# package' > /app/core/__init__.py"
+docker compose exec api sh -c "echo '# package' > /app/core/models/__init__.py"
+docker compose exec api sh -c "echo '# package' > /app/core/config/__init__.py"
+docker compose exec api sh -c "echo '# package' > /app/core/abstractions/__init__.py"
+docker compose exec api sh -c "echo '# package' > /app/workers/__init__.py"
+docker compose exec api sh -c "echo '# package' > /app/services/__init__.py"
+docker compose exec api sh -c "echo '# package' > /app/services/api/__init__.py"
+docker compose exec api sh -c "echo '# package' > /app/services/api/routers/__init__.py"
+docker compose exec api sh -c "echo '# package' > /app/services/detector/__init__.py"
+docker compose exec api sh -c "echo '# package' > /app/services/face_engine/__init__.py"
+docker compose exec api sh -c "echo '# package' > /app/services/compressor/__init__.py"
+docker compose exec api sh -c "echo '# package' > /app/services/attribute_analyzer/__init__.py"
+docker compose exec api sh -c "echo '# package' > /app/services/video_processor/__init__.py"
+
+docker compose exec api python scripts/setup/init_db.py
