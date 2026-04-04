@@ -364,15 +364,21 @@ async def login(
     from jose import jwt
     from core.config.settings import settings
 
-
-
     result = await db.execute(
         select(ApiUser).where(ApiUser.username == form.username, ApiUser.is_active == True)
     )
     user = result.scalar_one_or_none()
 
+    # Periksa user dulu, baru periksa password (urutan penting — hindari crash jika user None)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     pw_match = _bcrypt.checkpw(form.password.encode(), user.hashed_password.encode())
-    if not user or not pw_match:
+    if not pw_match:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
