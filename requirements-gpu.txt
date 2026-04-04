@@ -6,9 +6,10 @@
 # Object Detection
 ultralytics==8.3.55
 
-# Face Recognition
+# Face Recognition (butuh build-essential untuk compile)
 insightface==0.7.3
 
-# onnxruntime-gpu 1.17.x cocok dengan cuDNN 8 (image nvidia/cuda:12.1.1-cudnn8)
-# onnxruntime-gpu 1.20.x butuh cuDNN 9 — tidak cocok dengan base image kita
+# onnxruntime-gpu 1.17.x = versi terakhir yang kompatibel dengan cuDNN 8
+# Image base kita: nvidia/cuda:12.1.1-cudnn8-runtime → pakai cuDNN 8
+# onnxruntime-gpu 1.18+ membutuhkan cuDNN 9 → tidak cocok
 onnxruntime-gpu==1.17.3
