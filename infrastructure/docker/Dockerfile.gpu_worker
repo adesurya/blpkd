@@ -1,5 +1,5 @@
 # infrastructure/docker/Dockerfile.gpu_worker
-# cudnn8 — sesuai dengan onnxruntime-gpu 1.17.x
+# Base: cuda 12.1 + cudnn8, lalu install cudnn9 di atas
 FROM nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -7,6 +7,7 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONPATH=/app
 
+# Install system deps + cuDNN 9 (dibutuhkan oleh onnxruntime-gpu >= 1.18)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     python3.11 \
@@ -19,7 +20,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxext6 \
     git \
     curl \
+    wget \
     && rm -rf /var/lib/apt/lists/*
+
+# Install cuDNN 9 via pip (cara resmi NVIDIA untuk container)
+# Ini menginstall shared library cudnn9 tanpa perlu ganti base image
+RUN pip install --no-cache-dir nvidia-cudnn-cu12==9.1.0.70
+
+# Set LD_LIBRARY_PATH agar onnxruntime bisa menemukan libcudnn.so.9
+ENV LD_LIBRARY_PATH=/usr/local/lib/python3.11/dist-packages/nvidia/cudnn/lib:$LD_LIBRARY_PATH
 
 RUN ln -sf /usr/bin/python3.11 /usr/bin/python && \
     ln -sf /usr/bin/python3.11 /usr/bin/python3
@@ -28,11 +37,13 @@ WORKDIR /app
 
 RUN pip install --no-cache-dir --upgrade pip
 
+# Install PyTorch dengan CUDA 12.1
 RUN pip install --no-cache-dir \
     torch==2.5.1 \
     torchvision==0.20.1 \
     --index-url https://download.pytorch.org/whl/cu121
 
+# Install semua dependencies
 COPY requirements-api.txt requirements-gpu.txt ./
 RUN pip install --no-cache-dir -r requirements-gpu.txt
 

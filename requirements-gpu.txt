@@ -1,15 +1,12 @@
 # requirements-gpu.txt
-# GPU worker dependencies
-
 -r requirements-api.txt
 
 # Object Detection
 ultralytics==8.3.55
 
-# Face Recognition (butuh build-essential untuk compile)
+# Face Recognition
 insightface==0.7.3
 
-# onnxruntime-gpu 1.17.x = versi terakhir yang kompatibel dengan cuDNN 8
-# Image base kita: nvidia/cuda:12.1.1-cudnn8-runtime → pakai cuDNN 8
-# onnxruntime-gpu 1.18+ membutuhkan cuDNN 9 → tidak cocok
-onnxruntime-gpu==1.17.3
+# onnxruntime-gpu 1.20.x butuh cuDNN 9
+# cuDNN 9 di-install via nvidia-cudnn-cu12 di Dockerfile
+onnxruntime-gpu==1.20.1
