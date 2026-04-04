@@ -10,6 +10,7 @@ log = structlog.get_logger(__name__)
 def process_stream_frame(self, frame_data: dict) -> dict[str, Any]:
     """Process a single stream frame: detect → analyze → save DB → fire webhooks."""
     import asyncio, base64, cv2, numpy as np
+    from datetime import datetime, timezone
     from services.detector.yolo_detector import YOLODetector
     from services.attribute_analyzer.color_detector import AttributeAnalyzer
 
@@ -44,7 +45,7 @@ def process_stream_frame(self, frame_data: dict) -> dict[str, Any]:
                 color_counts[attrs.upper_color] = color_counts.get(attrs.upper_color, 0) + 1
         detections_data.append(({
             "session_id": session_id, "camera_id": camera_id,
-            "frame_number": frame_number, "timestamp": frame_data.get("timestamp"),
+            "frame_number": frame_number, "timestamp": datetime.fromtimestamp(frame_data.get("timestamp") or 0, tz=timezone.utc),
             "track_id": person.track_id, "confidence": person.confidence,
             "bbox_x": person.bbox.x, "bbox_y": person.bbox.y,
             "bbox_w": person.bbox.w, "bbox_h": person.bbox.h, "zone_id": person.zone_id,
