@@ -360,18 +360,19 @@ async def login(
     """Get JWT access token (24-hour validity)."""
     from sqlalchemy import select
     from core.models.database import ApiUser
-    from passlib.context import CryptContext
+    import bcrypt as _bcrypt
     from jose import jwt
     from core.config.settings import settings
 
-    pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 
     result = await db.execute(
         select(ApiUser).where(ApiUser.username == form.username, ApiUser.is_active == True)
     )
     user = result.scalar_one_or_none()
 
-    if not user or not pwd_ctx.verify(form.password, user.hashed_password):
+    pw_match = _bcrypt.checkpw(form.password.encode(), user.hashed_password.encode())
+    if not user or not pw_match:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
