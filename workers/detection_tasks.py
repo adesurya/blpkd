@@ -45,7 +45,7 @@ def process_stream_frame(self, frame_data: dict) -> dict[str, Any]:
                 color_counts[attrs.upper_color] = color_counts.get(attrs.upper_color, 0) + 1
         detections_data.append(({
             "session_id": session_id, "camera_id": camera_id,
-            "frame_number": frame_number, "timestamp": datetime.fromtimestamp(frame_data.get("timestamp") or 0, tz=timezone.utc),
+            "frame_number": frame_number, "timestamp": datetime.now(timezone.utc),  # waktu sekarang, bukan PTS video
             "track_id": person.track_id, "confidence": person.confidence,
             "bbox_x": person.bbox.x, "bbox_y": person.bbox.y,
             "bbox_w": person.bbox.w, "bbox_h": person.bbox.h, "zone_id": person.zone_id,

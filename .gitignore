@@ -14,7 +14,6 @@ venv/
 .env.*.local
 
 # AI Models (large files — store in MinIO or Git LFS)
-models/
 *.pt
 *.onnx
 *.engine
